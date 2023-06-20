@@ -5,6 +5,17 @@ Wrapper = {
     cam = {}
 }
 
+function Wrapper:CreateObject()
+
+end
+
+function Wrapper:LoadModel()
+    while not HasModelLoaded(GetHashKey(model)) do
+        RequestModel(GetHashKey(model))
+        Citizen.Wait(5)
+    end
+end
+
 
 function Wrapper:Target(id,Label,pos,event,_sizex,_sizey)
     local sizex = _sizex or 1
