@@ -5,11 +5,11 @@ Wrapper = {
     cam = {}
 }
 
-function Wrapper:CreateObject()
+function Wrapper:CreateObject() -- Create object / prop
 
 end
 
-function Wrapper:LoadModel()
+function Wrapper:LoadModel() -- Load Model
     while not HasModelLoaded(GetHashKey(model)) do
         RequestModel(GetHashKey(model))
         Citizen.Wait(5)
@@ -17,7 +17,7 @@ function Wrapper:LoadModel()
 end
 
 
-function Wrapper:Target(id,Label,pos,event,_sizex,_sizey)
+function Wrapper:Target(id,Label,pos,event,_sizex,_sizey) -- QBTarget target create
     local sizex = _sizex or 1
     local sizey = _sizey or 1
     print(id,Label,pos,event.. " : Wrapper created a target")
@@ -39,11 +39,11 @@ function Wrapper:Target(id,Label,pos,event,_sizex,_sizey)
     })
 end
 
-function Wrapper:TargetRemove(sendid)
+function Wrapper:TargetRemove(sendid) -- Remove QBTarget target
     exports["qb-target"]:RemoveZone(sendid)
 end
 
-function Wrapper:Blip(id,label,pos,sprite,color,scale)
+function Wrapper:Blip(id,label,pos,sprite,color,scale) -- Create Normal Blip on Map
     Wrapper.blip[id] = AddBlipForCoord(pos.x, pos.y, pos.z)
     SetBlipSprite (Wrapper.blip[id], sprite)
     SetBlipDisplay(Wrapper.blip[id], 4)
@@ -55,7 +55,7 @@ function Wrapper:Blip(id,label,pos,sprite,color,scale)
     EndTextCommandSetBlipName(Wrapper.blip[id])
 end
 
-function Wrapper:Stash(label,weight,slots)
+function Wrapper:Stash(label,weight,slots) -- Create and Open a stash in qb-inventory
     TriggerEvent("inventory:client:SetCurrentStash", label)
     TriggerServerEvent("inventory:server:OpenInventory", "stash", label, {
         maxweight = weight,
@@ -63,19 +63,19 @@ function Wrapper:Stash(label,weight,slots)
     })
 end
 
-function Wrapper:Notify(txt,tp,time)
+function Wrapper:Notify(txt,tp,time) -- QBCore notify
     QBCore.Functions.Notify(txt, tp, time)
 end
 
-function Wrapper:Bill(playerId, amount)
+function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bills => Player and amount (player,amount)
     TriggerServerEvent('Wrapper:Bill',playerId, amount)
 end
 
-function Wrapper:AddItem(item,amount) 
+function Wrapper:AddItem(item,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
     TriggerServerEvent('Wrapper:AddItem',item,amount)
 end
 
-function Wrapper:Craft(txt,time)
+function Wrapper:Craft(txt,time) -- Not Done
     QBCore.Functions.Progressbar("pickup_sla", txt, time, false, true, {
         disableMovement = true,
         disableCarMovement = true,
@@ -92,19 +92,19 @@ function Wrapper:Craft(txt,time)
     end)
 end
 
-function Wrapper:Cam(id,trans)
+function Wrapper:Cam(id,trans) -- Create and render a camera :)
     Wrapper.cam[id] = CreateCam("DEFAULT_SCRIPTED_CAMERA", 1)
     RenderScriptCams(true, 1, trans or 1500,  true,  true)
     Wrapper:processCamera(Wrapper.cam[id])
 end
 
-function Wrapper:CamDestory(id,trans)
+function Wrapper:CamDestory(id,trans) -- KILL THE CAMERA !!!!
     activated = false
     RenderScriptCams(false, 1, trans or 1500,  true,  true)
     DestroyCam(Wrapper.cam[id], false)
 end
 
-function Wrapper:processCamera(id)
+function Wrapper:processCamera(id) -- process the camera :)
     local rotx, roty, rotz = table.unpack(GetEntityRotation(PlayerPedId()))
 	local camX, camY, camZ = table.unpack(GetGameplayCamCoord())
 	local camRX, camRY, camRZ = GetGameplayCamRelativePitch(), 0.0, GetGameplayCamRelativeHeading()
@@ -116,11 +116,11 @@ function Wrapper:processCamera(id)
 	SetCamFov(Wrapper.cam[id], camF - 120) 
 end
 
-function Wrapper:Log(webhook,txt)
+function Wrapper:Log(webhook,txt) -- Log all of your abusive staff
     TriggerServerEvent('Wrapper:Log',webhook,txt)
 end
 
-function Wrapper:Tp(_coords,fancy,ped)
+function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very pretty
     local ped = _ped or PlayerPedId()
     local coords = _coords
     print(coords)
