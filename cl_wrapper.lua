@@ -2,18 +2,29 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 Wrapper = {
     blip = {},
-    cam = {}
+    cam = {},
+    object = {}
 }
 
-function Wrapper:CreateObject(Object) -- Create object / prop
-    self.LoadModel(Object)
+function Wrapper:CreateObject(id,prop,coords,network,misson) -- Create object / prop
+    self.LoadModel(prop)
+
+    object[id]["objectId"] = CreateObject(GetHashKey(prop), coords, network or false,misson or false)
+    print(object[id])
+    PlaceObjectOnGroundProperly(object[id]["objectId"])
+    SetEntityHeading(object[id]["objectId"], object[id]["h"])
+    FreezeEntityPosition(object[id]["objectId"], true)
+    SetEntityAsMissionEntity(object[id]["objectId"], true, true)
 end
 
 function Wrapper:LoadModel() -- Load Model
+    print()
     while not HasModelLoaded(GetHashKey(model)) do
         RequestModel(GetHashKey(model))
+        print('loading')
         Citizen.Wait(5)
     end
+    return
 end
 
 
