@@ -5,8 +5,8 @@ Wrapper = {
     cam = {}
 }
 
-function Wrapper:CreateObject() -- Create object / prop
-
+function Wrapper:CreateObject(Object) -- Create object / prop
+    self.LoadModel(Object)
 end
 
 function Wrapper:LoadModel() -- Load Model
@@ -95,7 +95,7 @@ end
 function Wrapper:Cam(id,trans) -- Create and render a camera :)
     Wrapper.cam[id] = CreateCam("DEFAULT_SCRIPTED_CAMERA", 1)
     RenderScriptCams(true, 1, trans or 1500,  true,  true)
-    Wrapper:processCamera(Wrapper.cam[id])
+    self.processCamera(Wrapper.cam[id])
 end
 
 function Wrapper:CamDestory(id,trans) -- KILL THE CAMERA !!!!
