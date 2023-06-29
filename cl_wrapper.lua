@@ -1,4 +1,6 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+if Config.Settings.Framework == "QB" then local QBCore = exports['qb-core']:GetCoreObject() end 
+if Config.Settings.Framework == "QBX" then local QBCore = exports['qbx-core']:GetCoreObject() end 
+
 
 Wrapper = {
     blip = {},
@@ -8,46 +10,71 @@ Wrapper = {
 
 function Wrapper:CreateObject(id,prop,coords,network,misson) -- Create object / prop
     self.LoadModel(prop)
-
-    object[id]["objectId"] = CreateObject(GetHashKey(prop), coords, network or false,misson or false)
-    print(object[id])
-    PlaceObjectOnGroundProperly(object[id]["objectId"])
-    SetEntityHeading(object[id]["objectId"], object[id]["h"])
-    FreezeEntityPosition(object[id]["objectId"], true)
-    SetEntityAsMissionEntity(object[id]["objectId"], true, true)
+    --print(id)
+    Wrapper.object[id] = CreateObject(GetHashKey(prop), coords, network or false,misson or false)
+    --print(Wrapper.object[id])
+    PlaceObjectOnGroundProperly(Wrapper.object[id])
+    SetEntityHeading(Wrapper.object[id], coords.w)
+    FreezeEntityPosition(Wrapper.object[id], true)
+    SetEntityAsMissionEntity(Wrapper.object[id], true, true)
+    --print(Wrapper.object[id])
+    --print(GetEntityCoords(Wrapper.object[id]))
 end
 
-function Wrapper:LoadModel() -- Load Model
-    print()
-    while not HasModelLoaded(GetHashKey(model)) do
-        RequestModel(GetHashKey(model))
-        print('loading')
-        Citizen.Wait(5)
+
+function Wrapper:DeleteObject(id)
+    DeleteObject(Wrapper.object[id])
+end
+
+function Wrapper:LoadModel(model) -- Load Model
+    local modelHash = 'ch_prop_laptop_01a'
+    RequestModel(modelHash)
+    while not HasModelLoaded(modelHash) do
+      Wait(0)
+      --print('loading')
     end
-    return
+    --print('yess')
 end
 
 
-function Wrapper:Target(id,Label,pos,event,_sizex,_sizey) -- QBTarget target create
-    local sizex = _sizex or 1
-    local sizey = _sizey or 1
-    print(id,Label,pos,event.. " : Wrapper created a target")
-    exports["qb-target"]:AddBoxZone(Label..id, pos, sizex, sizey, {
-        name = Label..id,
-        heading = '90.0',
-        minZ = pos - 5,
-        maxZ = pos + 5
-    }, {
+function Wrapper:Target(id,label,pos,event,_sizex,_sizey) -- QBTarget target create
+    if Config.Settings.Target == "QB" then 
+        local sizex = _sizex or 1
+        local sizey = _sizey or 1
+        --print(id,label,pos,event.. " : Wrapper created a target")
+        exports["qb-target"]:AddBoxZone(id, pos, sizex, sizey, {
+            name = id,
+            heading = '90.0',
+            minZ = pos - 5,
+            maxZ = pos + 5
+        }, {
+            options = {
+                {
+                    type = "client",
+                    event = event,
+                    icon = "fas fa-button",
+                    label = label,
+                }
+            },
+            distance = 1.5
+        })
+    end
+    if Config.Settings.Target == "OX" then 
+        exports["ox_target"]:addBoxZone({ -- -1183.28, -884.06, 13.75
+        coords = vec3(pos.x,pos.y,pos.z),
+        size = vec3(1, 1, 1),
+        rotation = 45,
+        debug = false,
         options = {
             {
-                type = "client",
+                name = id,
                 event = event,
-                icon = "fas fa-button",
-                label = Label,
-            }
-        },
-        distance = 1.5
+                icon = 'fa-solid fa-cube',
+                label = label,
+            },
+        }
     })
+    end
 end
 
 function Wrapper:TargetRemove(sendid) -- Remove QBTarget target
@@ -83,7 +110,28 @@ function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bi
 end
 
 function Wrapper:AddItem(item,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
-    TriggerServerEvent('Wrapper:AddItem',item,amount)
+    --print('Wrapper Add Item :'.. item .."  x"..amount )
+    if Config.Settings.ReturnItem then 
+    TriggerServerEvent('Wrapper2:AddItem',item,amount)
+    end
+end
+
+function Wrapper:RemoveItem(item,amount)
+    if Config.Settings.Framework == "QB" then 
+        --print('Wrapper Remove Item ' .. item .. "  x".. amount)
+        TriggerServerEvent('Wrapper2:RemoveItem', item, amount)
+    end
+    if Config.Settings.Framework == "ESX" then 
+        
+    end
+    if Config.Settings.Framework == "Custom" then 
+        
+    end
+end
+
+function Wrapper:AddMoney(type,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
+    --print('Wrapper Add Money :'.. type .."  x"..amount )
+    TriggerServerEvent('Wrapper:AddMoney',type,amount)
 end
 
 function Wrapper:Craft(txt,time) -- Not Done
@@ -134,7 +182,7 @@ end
 function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very pretty
     local ped = _ped or PlayerPedId()
     local coords = _coords
-    print(coords)
+    --print(coords)
     if coords == nil then 
         QBCore.Functions.Notify("Wrapper: Нямаш coords бай хуй", 'error', 2500)
         return
@@ -146,5 +194,4 @@ function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very p
     end
     SetEntityCoords(ped,coords)
 end
-
 
