@@ -27,7 +27,7 @@ function Wrapper:DeleteObject(id)
 end
 
 function Wrapper:LoadModel(model) -- Load Model
-    local modelHash = 'ch_prop_laptop_01a'
+    local modelHash = model
     RequestModel(modelHash)
     while not HasModelLoaded(modelHash) do
       Wait(0)
