@@ -1,4 +1,9 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+if Config.Settings.Framework == "QB" then local QBCore = exports['qb-core']:GetCoreObject() end 
+if Config.Settings.Framework == "QBX" then local QBCore = exports['qbx-core']:GetCoreObject() end 
+if Config.Settings.Framework == "ESX" then 
+    ESX = exports["es_extended"]:getSharedObject()
+end
+
 Wrapper = {}
 
 RegisterNetEvent("Wrapper:Bill",function(playerId, amount)
@@ -6,17 +11,17 @@ RegisterNetEvent("Wrapper:Bill",function(playerId, amount)
 end)
 
 RegisterNetEvent("Wrapper2:AddItem",function(item,amount)
-    --print('Wrapper Server : Add Item ' ..item.. "  x"..amount)
+    ------print('Wrapper Server : Add Item ' ..item.. "  x"..amount)
     Wrapper:AddItemServer(item,amount)
 end)
 
 RegisterNetEvent("Wrapper2:RemoveItem",function(item,amount)
-    --print('Wrapper Server : Remove Item ' ..item.. "  x"..amount)
+    ------print('Wrapper Server : Remove Item ' ..item.. "  x"..amount)
     Wrapper:RemoveItemServer(item,amount)
 end)
 
 RegisterNetEvent("Wrapper:AddMoney",function(item,amount)
-    --print('Wrapper Server : Add Item ' ..item.. "  x"..amount)
+    ------print('Wrapper Server : Add Item ' ..item.. "  x"..amount)
     Wrapper:AddMoney(item,amount)
 end)
 
@@ -29,26 +34,64 @@ function Wrapper:AddMoney(type,amount)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     if not Player then return end
-    --print('Wrapper Final AddMoney : '.. type.. "  x".. amount)
+    ------print('Wrapper Final AddMoney : '.. type.. "  x".. amount)
     Player.Functions.AddMoney(type, amount) 
 end
 
 function Wrapper:AddItemServer(item,amount)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    print('Wrapper Final AddItem : '.. item.. "  x".. amount)
-    Player.Functions.AddItem(item, amount) 
-    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "add")
+    if Config.Settings.Framework == "QB" then 
+        local src = source
+        local Player = QBCore.Functions.GetPlayer(src)
+        if not Player then return end
+        --print('Wrapper Final AddItem : '.. item.. "  x".. amount)
+        Player.Functions.AddItem(item, amount) 
+        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "add")
+    end
+    if Config.Settings.Framework == "QBX" then 
+        local src = source
+        local Player = QBCore.Functions.GetPlayer(src)
+        if not Player then return end
+        --print('Wrapper Final AddItem : '.. item.. "  x".. amount)
+        Player.Functions.AddItem(item, amount) 
+        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "add")
+    end
+    if Config.Settings.Framework == "ESX" then 
+        local src = source 
+        if Config.Settings.Inventory == "QS" then 
+            exports['qs-inventory']:AddItem(src, item, amount)
+            return
+        end
+        local xPlayer = ESX.GetPlayerFromId(src)
+        xPlayer.addInventoryItem(item, amount)
+    end
 end
 
 function Wrapper:RemoveItemServer(item,amount)
-    local src = source
-    local Player = QBCore.Functions.GetPlayer(src)
-    if not Player then return end
-    --print('Wrapper Final RemoveItem : '.. item.. "  x".. amount)
-    Player.Functions.RemoveItem(item, amount) 
-    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "remove")
+    if Config.Settings.Framework == "QB" then 
+        local src = source
+        local Player = QBCore.Functions.GetPlayer(src)
+        if not Player then return end
+        ----print('Wrapper Final RemoveItem : '.. item.. "  x".. amount)
+        Player.Functions.RemoveItem(item, amount) 
+        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "remove")
+    end
+    if Config.Settings.Framework == "QBX" then 
+        local src = source
+        local Player = QBCore.Functions.GetPlayer(src)
+        if not Player then return end
+        ----print('Wrapper Final RemoveItem : '.. item.. "  x".. amount)
+        Player.Functions.RemoveItem(item, amount) 
+        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "remove")
+    end
+    if Config.Settings.Framework == "ESX" then 
+        local src = source 
+        if Config.Settings.Inventory == "QS" then 
+            exports['qs-inventory']:RemoveItem(src, item, amount)
+            return
+        end
+        local xPlayer = ESX.GetPlayerFromId(src)
+        xPlayer.removeInventoryItem(item, amount)
+    end
 end
 
 function Wrapper:Log(_src,webhook,txt)
@@ -131,3 +174,4 @@ function Wrapper:Identifiers(src)
 
     return identifiers
 end
+
