@@ -1,23 +1,5 @@
-CreateThread(function()
-    if Config.Settings.Framework == "QB" then local QBCore = exports['qb-core']:GetCoreObject() end 
-    if Config.Settings.Framework == "QBX" then local QBCore = exports['qbx-core']:GetCoreObject() end 
-    if Config.Settings.Framework == "ESX" then
-        ESX = exports["es_extended"]:getSharedObject()
-    end
-end)
 
-firstSpawn = true
-AddEventHandler('playerSpawned', function()
-   if firstSpawn then
-       if Config.Settings.Framework == "QB" then local QBCore = exports['qb-core']:GetCoreObject() end 
-       if Config.Settings.Framework == "QBX" then local QBCore = exports['qbx-core']:GetCoreObject() end 
-       if Config.Settings.Framework == "ESX" then
-           ESX = exports["es_extended"]:getSharedObject()
-       end
-       firstSpawn = false
-   end
-end)
-
+  
 Wrapper = {
     blip = {},
     cam = {},
@@ -27,18 +9,33 @@ Wrapper = {
 }
 
 function Wrapper:CreateObject(id,prop,coords,network,misson) -- Create object / prop
-    self.LoadModel(prop)
-    ------print(id)
-    Wrapper.object[id] = CreateObject(GetHashKey(prop), coords, network or false,misson or false)
-    ------print(Wrapper.object[id])
+    RequestModel(prop)
+    while not HasModelLoaded(prop) do
+      Wait(0)
+    end
+    Wrapper.object[id] = CreateObject(GetHashKey(prop), coords , network or false,misson or false)
     PlaceObjectOnGroundProperly(Wrapper.object[id])
     SetEntityHeading(Wrapper.object[id], coords.w)
     FreezeEntityPosition(Wrapper.object[id], true)
     SetEntityAsMissionEntity(Wrapper.object[id], true, true)
-    ------print(Wrapper.object[id])
-    ------print(GetEntityCoords(Wrapper.object[id]))
 end
 
+AddEventHandler('onResourceStop', function(resourceName)
+    if (GetCurrentResourceName() ~= resourceName) then
+      return
+    end
+    TriggerEvent('Wrapper:Reset')
+end)
+  
+
+RegisterNetEvent('Wrapper:Reset',function()
+    for k,v in pairs(Wrapper.object) do 
+        DeleteObject(v)
+    end
+    for k,v in pairs(Wrapper.blip) do
+        RemoveBlip(v)
+    end
+end)
 
 function Wrapper:DeleteObject(id)
     DeleteObject(Wrapper.object[id])
@@ -49,18 +46,14 @@ function Wrapper:LoadModel(model) -- Load Model
     RequestModel(modelHash)
     while not HasModelLoaded(modelHash) do
       Wait(0)
-      ------print('loading')
     end
-    ------print('yess')
 end
 
 
 function Wrapper:Target(id,label,pos,event,type) -- QBTarget target create
-    ----print(id,label,pos,event,_sizex,_sizey)
     if Config.Settings.Target == "QB" then 
         local sizex = 1
         local sizey = 1
-        ----print(id,label,pos,event.. " : Wrapper created a target")
         exports["qb-target"]:AddBoxZone(id, pos, sizex, sizey, {
             name = id,
             heading = '90.0',
@@ -78,10 +71,9 @@ function Wrapper:Target(id,label,pos,event,type) -- QBTarget target create
             distance = 1.5
         })
     end
-    if Config.Settings.Target == "OX" then 
-        ----print(id,label,pos,event)
-        exports["ox_target"]:addBoxZone({ -- -1183.28, -884.06, 13.75
-        coords = vec3(pos.x,pos.y,pos.z),
+    if Config.Settings.Target == "OX" then
+        Wrapper.zone[id] = exports["ox_target"]:addBoxZone({ -- -1183.28, -884.06, 13.75
+        coords = vec3(pos.x,pos.y,pos.z - 1),
         size = vec3(1, 1, 1),
         rotation = 45,
         debug = false,
@@ -97,7 +89,6 @@ function Wrapper:Target(id,label,pos,event,type) -- QBTarget target create
     end
     if Config.Settings.Target == "BT" then 
         local _id = id
-        ----print(_id,pos.x,pos.y,pos.z,event,label)
         exports['bt-target']:AddBoxZone(_id, vector3(pos.x,pos.y,pos.z), 0.4, 0.6, {
             name=_id,
             heading=91,
@@ -119,15 +110,15 @@ end
 
 function Wrapper:TargetRemove(sendid) -- Remove QBTarget target
     if Config.Settings.Target == "QB" then 
-    exports["qb-target"]:RemoveZone(sendid)
+        exports["qb-target"]:RemoveZone(sendid)
     end 
     if Config.Settings.Target == "OX" then 
-        -- ----print('removing zone ' .. sendid)
         exports['ox_target']:removeZone(Wrapper.zone[sendid])
     end
     if Config.Settings.Target == "BT" then 
         exports['bt-taget']:RemoveZone(sendid)
     end
+    return
 end
 
 function Wrapper:Blip(id,label,pos,sprite,color,scale) -- Create Normal Blip on Map
@@ -156,7 +147,6 @@ function Wrapper:Stash(label,weight,slots) -- Create and Open a stash in qb-inve
     })
     end
     if Config.Settings.Inventory == "OX" then 
-        ----print('ox label' .. label)
         TriggerServerEvent('Wrapper:Inventory:Stash:Ox',label)
         Wait(500)
         TriggerServerEvent('Wrapper:Inventory:Stash:Ox:Open',label)
@@ -173,7 +163,12 @@ function Wrapper:Stash(label,weight,slots) -- Create and Open a stash in qb-inve
 end
 
 function Wrapper:Notify(txt,tp,time) -- QBCore notify
+    if Config.Settings.Framework == "QB" then 
     QBCore.Functions.Notify(txt, tp, time)
+    end
+    if Config.Settings.Framework == "ESX" then 
+        ESX.ShowNotification(txt)
+    end
 end
 
 function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bills => Player and amount (player,amount)
@@ -181,7 +176,6 @@ function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bi
 end
 
 function Wrapper:AddItem(item,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
-    ------print('Wrapper Add Item :'.. item .."  x"..amount )
     if Config.Settings.ReturnItem then 
         TriggerServerEvent('Wrapper2:AddItem',item,amount)
     end
@@ -194,7 +188,6 @@ function Wrapper:RemoveItem(item,amount)
 end
 
 function Wrapper:AddMoney(type,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
-    ------print('Wrapper Add Money :'.. type .."  x"..amount )
     TriggerServerEvent('Wrapper:AddMoney',type,amount)
 end
 
@@ -246,7 +239,6 @@ end
 function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very pretty
     local ped = _ped or PlayerPedId()
     local coords = _coords
-    ------print(coords)
     if coords == nil then 
         QBCore.Functions.Notify("Wrapper: Нямаш coords бай хуй", 'error', 2500)
         return
@@ -309,4 +301,83 @@ function Wrapper:Prompt(msg) --Msg is part of the Text String at B
 	SetNotificationTextEntry('STRING')
 	AddTextComponentString(msg) -- B
 	DrawNotification(true, false) -- Look on that website for what these mean, I forget. I think one is about flashing or not
+end
+
+
+-- THIS SCRIPT ONLY
+
+function Wrapper:Target2(id,label,label2,pos,event,event2,type) -- QBTarget target create
+    if Config.Settings.Target == "QB" then 
+        local sizex = 1
+        local sizey = 1
+        exports["qb-target"]:AddBoxZone(id, pos, sizex, sizey, {
+            name = id,
+            heading = '90.0',
+            minZ = pos - 5,
+            maxZ = pos + 5
+        }, {
+            options = {
+                {
+                    type = "client",
+                    event = event,
+                    icon = "fas fa-button",
+                    label = label,
+                },
+                {
+                    type = "client",
+                    event = event2,
+                    icon = "fas fa-button",
+                    label = label2,
+                }
+            },
+            distance = 1.5
+        })
+    end
+    if Config.Settings.Target == "OX" then 
+        Wrapper.zone[id] = exports["ox_target"]:addBoxZone({ -- -1183.28, -884.06, 13.75
+        coords = vec3(pos.x,pos.y,pos.z - 1),
+        size = vec3(1, 1, 1),
+        rotation = 45,
+        debug = false,
+        options = {
+            {
+                name = id,
+                event = event,
+                icon = 'fa-solid fa-cube',
+                label = label,
+            },
+            {
+                name = 'asda',
+                event = event2,
+                icon = 'fa-solid fa-cube',
+                label = label2,
+            },
+        }
+    })
+    end
+    if Config.Settings.Target == "BT" then 
+        local _id = id
+        exports['bt-target']:AddBoxZone(_id, vector3(pos.x,pos.y,pos.z), 0.4, 0.6, {
+            name=_id,
+            heading=91,
+            minZ = pos.z - 1,
+            maxZ = pos.z + 1
+            }, {
+                options = {
+                    {
+                        type = "client",
+                        event = event,
+                        icon = 'fa-solid fa-cube',
+                        label = label,
+                    },
+                    {
+                        type = "client",
+                        event = event2,
+                        icon = "fas fa-button",
+                        label = label2,
+                    }
+                },
+                distance = 1.5
+            })
+    end
 end
