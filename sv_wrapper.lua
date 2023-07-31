@@ -1,16 +1,18 @@
-Wrapper = {}
+Wrapper = {
+    ServerCallbacks = {}
+}
 
 RegisterNetEvent("Wrapper:Bill",function(playerId, amount)
     Wrapper:Bill(playerId, amount)
 end)
 
 RegisterNetEvent("Wrapper2:AddItem",function(item,amount)
-    ------print('Wrapper Server : Add Item ' ..item.. "  x"..amount)
+    ------print("Wrapper Server : Add Item " ..item.. "  x"..amount)
     Wrapper:AddItemServer(item,amount)
 end)
 
 RegisterNetEvent("Wrapper2:RemoveItem",function(item,amount)
-    ------print('Wrapper Server : Remove Item ' ..item.. "  x"..amount)
+    ------print("Wrapper Server : Remove Item " ..item.. "  x"..amount)
     Wrapper:RemoveItemServer(item,amount)
 end)
 
@@ -44,26 +46,43 @@ function Wrapper:AddItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        --print('Wrapper Final AddItem : '.. item.. "  x".. amount)
+        --print("Wrapper Final AddItem : ".. item.. "  x".. amount)
         Player.Functions.AddItem(item, amount) 
-        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "add")
+        TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "add")
     end
     if Config.Settings.Framework == "QBX" then 
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        --print('Wrapper Final AddItem : '.. item.. "  x".. amount)
+        --print("Wrapper Final AddItem : ".. item.. "  x".. amount)
         Player.Functions.AddItem(item, amount) 
-        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "add")
+        TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "add")
     end
     if Config.Settings.Framework == "ESX" then 
         local src = source 
         if Config.Settings.Inventory == "QS" then 
-            exports['qs-inventory']:AddItem(src, item, amount)
+            exports["qs-inventory"]:AddItem(src, item, amount)
             return
         end
         local xPlayer = ESX.GetPlayerFromId(src)
         xPlayer.addInventoryItem(item, amount)
+    end
+end
+
+RegisterNetEvent("Wrapper:RemoveMoney",function(type,amount)
+    Wrapper:RemoveMoney(type,amount)
+end)
+
+function Wrapper:RemoveMoney(type,amount)
+    local src = source
+    if Config.Settings.Framework == "QB" then
+        local Player = QBCore.Functions.GetPlayer(src)
+        if not Player then return end
+        Player.Functions.RemoveMoney(type, amount)
+    end
+    if Config.Settings.Framework == "ESX" then 
+        local xPlayer = ESX.GetPlayerFromId(src)
+        xPlayer.removeAccountMoney(type, amount)
     end
 end
 
@@ -72,22 +91,22 @@ function Wrapper:RemoveItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        ----print('Wrapper Final RemoveItem : '.. item.. "  x".. amount)
+        ----print("Wrapper Final RemoveItem : ".. item.. "  x".. amount)
         Player.Functions.RemoveItem(item, amount) 
-        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "remove")
+        TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "remove")
     end
     if Config.Settings.Framework == "QBX" then 
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        ----print('Wrapper Final RemoveItem : '.. item.. "  x".. amount)
+        ----print("Wrapper Final RemoveItem : ".. item.. "  x".. amount)
         Player.Functions.RemoveItem(item, amount) 
-        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item], "remove")
+        TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "remove")
     end
     if Config.Settings.Framework == "ESX" then 
         local src = source 
         if Config.Settings.Inventory == "QS" then 
-            exports['qs-inventory']:RemoveItem(src, item, amount)
+            exports["qs-inventory"]:RemoveItem(src, item, amount)
             return
         end
         local xPlayer = ESX.GetPlayerFromId(src)
@@ -111,37 +130,37 @@ function Wrapper:Log(_src,webhook,txt)
             }
         }
     
-        PerformHttpRequest(webhook, function(err, text, headers) end, 'POST', json.encode({username = username, embeds = disconnect, tts = TTS}), { ['Content-Type'] = 'application/json' }) -- Perform the request to the discord webhook and send the specified message
+        PerformHttpRequest(webhook, function(err, text, headers) end, "POST", json.encode({username = username, embeds = disconnect, tts = TTS}), { ["Content-Type"] = "application/json" }) -- Perform the request to the discord webhook and send the specified message
 end
 
 function Wrapper:Bill(playerId, amount)
     local biller = QBCore.Functions.GetPlayer(source)
     local billed = QBCore.Functions.GetPlayer(tonumber(playerId))
     local amount = tonumber(amount)
-    if biller.PlayerData.job.name == 'sotw' then
+    if biller.PlayerData.job.name == "sotw" then
         if billed ~= nil then
             if biller.PlayerData.citizenid ~= billed.PlayerData.citizenid then
                 if amount and amount > 0 then
-                    exports['oxmysql']:insert('INSERT INTO phone_invoices (citizenid, amount, society, sender) VALUES (:citizenid, :amount, :society, :sender)', {
-                        ['citizenid'] = billed.PlayerData.citizenid,
-                        ['amount'] = amount,
-                        ['society'] = biller.PlayerData.job.name,
-                        ['sender'] = biller.PlayerData.charinfo.firstname
+                    exports["oxmysql"]:insert("INSERT INTO phone_invoices (citizenid, amount, society, sender) VALUES (:citizenid, :amount, :society, :sender)", {
+                        ["citizenid"] = billed.PlayerData.citizenid,
+                        ["amount"] = amount,
+                        ["society"] = biller.PlayerData.job.name,
+                        ["sender"] = biller.PlayerData.charinfo.firstname
                     })
-                    TriggerClientEvent('qb-phone:RefreshPhone', billed.PlayerData.source)
-                    TriggerClientEvent('QBCore:Notify', source, 'Invoice Successfully Sent', 'success')
-                    TriggerClientEvent('QBCore:Notify', billed.PlayerData.source, 'New Invoice Received')
+                    TriggerClientEvent("qb-phone:RefreshPhone", billed.PlayerData.source)
+                    TriggerClientEvent("QBCore:Notify", source, "Invoice Successfully Sent", "success")
+                    TriggerClientEvent("QBCore:Notify", billed.PlayerData.source, "New Invoice Received")
                 else
-                    TriggerClientEvent('QBCore:Notify', source, 'Must Be A Valid Amount Above 0', 'error')
+                    TriggerClientEvent("QBCore:Notify", source, "Must Be A Valid Amount Above 0", "error")
                 end
             else
-                TriggerClientEvent('QBCore:Notify', source, 'You Cannot Bill Yourself', 'error')
+                TriggerClientEvent("QBCore:Notify", source, "You Cannot Bill Yourself", "error")
             end
         else
-            TriggerClientEvent('QBCore:Notify', source, 'Player Not Online', 'error')
+            TriggerClientEvent("QBCore:Notify", source, "Player Not Online", "error")
         end
     else
-        TriggerClientEvent('QBCore:Notify', source, 'No Access', 'error')
+        TriggerClientEvent("QBCore:Notify", source, "No Access", "error")
     end
 end
 
