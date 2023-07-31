@@ -1,26 +1,27 @@
 Wrapper = {
+    resname = GetCurrentResourceName(),
     ServerCallbacks = {}
 }
 
-RegisterNetEvent("Wrapper:Bill",function(playerId, amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper:Bill",function(playerId, amount)
     Wrapper:Bill(playerId, amount)
 end)
 
-RegisterNetEvent("Wrapper2:AddItem",function(item,amount)
-    ------print("Wrapper Server : Add Item " ..item.. "  x"..amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper2:AddItem",function(item,amount)
+    ------print(Wrapper.resname.."Wrapper Server : Add Item " ..item.. "  x"..amount)
     Wrapper:AddItemServer(item,amount)
 end)
 
-RegisterNetEvent("Wrapper2:RemoveItem",function(item,amount)
-    ------print("Wrapper Server : Remove Item " ..item.. "  x"..amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper2:RemoveItem",function(item,amount)
+    ------print(Wrapper.resname.."Wrapper Server : Remove Item " ..item.. "  x"..amount)
     Wrapper:RemoveItemServer(item,amount)
 end)
 
-RegisterNetEvent("Wrapper:AddMoney",function(item,amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper:AddMoney",function(item,amount)
     Wrapper:AddMoney(item,amount)
 end)
 
-RegisterNetEvent("Wrapper:Log",function(item,amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper:Log",function(item,amount)
     local src = source
     Wrapper:Log(src, item,amount)
 end)
@@ -46,7 +47,7 @@ function Wrapper:AddItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        --print("Wrapper Final AddItem : ".. item.. "  x".. amount)
+        --print(Wrapper.resname.."Wrapper Final AddItem : ".. item.. "  x".. amount)
         Player.Functions.AddItem(item, amount) 
         TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "add")
     end
@@ -54,7 +55,7 @@ function Wrapper:AddItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        --print("Wrapper Final AddItem : ".. item.. "  x".. amount)
+        --print(Wrapper.resname.."Wrapper Final AddItem : ".. item.. "  x".. amount)
         Player.Functions.AddItem(item, amount) 
         TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "add")
     end
@@ -69,7 +70,7 @@ function Wrapper:AddItemServer(item,amount)
     end
 end
 
-RegisterNetEvent("Wrapper:RemoveMoney",function(type,amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper:RemoveMoney",function(type,amount)
     Wrapper:RemoveMoney(type,amount)
 end)
 
@@ -91,7 +92,7 @@ function Wrapper:RemoveItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        ----print("Wrapper Final RemoveItem : ".. item.. "  x".. amount)
+        ----print(Wrapper.resname.."Wrapper Final RemoveItem : ".. item.. "  x".. amount)
         Player.Functions.RemoveItem(item, amount) 
         TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "remove")
     end
@@ -99,7 +100,7 @@ function Wrapper:RemoveItemServer(item,amount)
         local src = source
         local Player = QBCore.Functions.GetPlayer(src)
         if not Player then return end
-        ----print("Wrapper Final RemoveItem : ".. item.. "  x".. amount)
+        ----print(Wrapper.resname.."Wrapper Final RemoveItem : ".. item.. "  x".. amount)
         Player.Functions.RemoveItem(item, amount) 
         TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[item], "remove")
     end
