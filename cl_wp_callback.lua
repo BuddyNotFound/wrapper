@@ -9,3 +9,11 @@ Wrapper.TriggerCallback = function(name, cb, ...)
     Wrapper.ServerCallbacks[name] = cb
     TriggerServerEvent("Wrapper:Server:TriggerCallback", name, ...)
 end
+
+[[-- 
+
+Wrapper.TriggerCallback('bbv-nos:loadnosenter', function(return)
+
+end,data)
+
+--}}

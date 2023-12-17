@@ -3,27 +3,14 @@ Wrapper = {
     ServerCallbacks = {}
 }
 
-RegisterNetEvent(Wrapper.resname.."Wrapper:Bill",function(playerId, amount)
-    Wrapper:Bill(playerId, amount)
-end)
-
-RegisterNetEvent(Wrapper.resname.."Wrapper2:AddItem",function(item,amount)
-    ------print(Wrapper.resname.."Wrapper Server : Add Item " ..item.. "  x"..amount)
-    Wrapper:AddItemServer(item,amount)
-end)
-
-RegisterNetEvent(Wrapper.resname.."Wrapper2:RemoveItem",function(item,amount)
-    ------print(Wrapper.resname.."Wrapper Server : Remove Item " ..item.. "  x"..amount)
-    Wrapper:RemoveItemServer(item,amount)
-end)
+-- ADD 
 
 RegisterNetEvent(Wrapper.resname.."Wrapper:AddMoney",function(item,amount)
     Wrapper:AddMoney(item,amount)
 end)
 
-RegisterNetEvent(Wrapper.resname.."Wrapper:Log",function(item,amount)
-    local src = source
-    Wrapper:Log(src, item,amount)
+RegisterNetEvent(Wrapper.resname.."Wrapper2:AddItem",function(item,amount)
+    Wrapper:AddItemServer(item,amount)
 end)
 
 function Wrapper:AddMoney(type,amount)
@@ -70,6 +57,14 @@ function Wrapper:AddItemServer(item,amount)
     end
 end
 
+-- ^ ADD
+
+-- REMOVE
+
+RegisterNetEvent(Wrapper.resname.."Wrapper2:RemoveItem",function(item,amount)
+    Wrapper:RemoveItemServer(item,amount)
+end)
+
 RegisterNetEvent(Wrapper.resname.."Wrapper:RemoveMoney",function(type,amount)
     Wrapper:RemoveMoney(type,amount)
 end)
@@ -115,24 +110,13 @@ function Wrapper:RemoveItemServer(item,amount)
     end
 end
 
-function Wrapper:Log(_src,webhook,txt)
-    local src = _src
-    local name = GetPlayerName(src)
-    local steam = GetPlayerIdentifier(src)
-    local ip = GetPlayerEndpoint(src)
-    local identifiers = Wrapper:Identifiers(src)
-    local license = identifiers.license
-    local discord ="<@" ..identifiers.discord:gsub("discord:", "")..">" 
-    local disconnect = {
-            {
-                ["color"] = "16711680", -- Color in decimal
-                ["title"] = txt, -- Title of the embed message
-                ["description"] = "Name: **"..name.."**\nSteam ID: **"..steam.."**\nIP: **" .. ip .."**\nGTA License: **" .. license .. "**\nDiscord Tag: **" .. discord .. "**\nLog: **"..txt.."**", -- Main Body of embed with the info about the person who left
-            }
-        }
-    
-        PerformHttpRequest(webhook, function(err, text, headers) end, "POST", json.encode({username = username, embeds = disconnect, tts = TTS}), { ["Content-Type"] = "application/json" }) -- Perform the request to the discord webhook and send the specified message
-end
+-- ^ REMOVE
+
+-- BILL
+
+RegisterNetEvent(Wrapper.resname.."Wrapper:Bill",function(playerId, amount)
+    Wrapper:Bill(playerId, amount)
+end)
 
 function Wrapper:Bill(playerId, amount)
     local biller = QBCore.Functions.GetPlayer(source)
@@ -164,6 +148,38 @@ function Wrapper:Bill(playerId, amount)
         TriggerClientEvent("QBCore:Notify", source, "No Access", "error")
     end
 end
+
+-- ^ BILL
+
+-- LOG
+
+RegisterNetEvent(Wrapper.resname.."Wrapper:Log",function(item,amount)
+    local src = source
+    Wrapper:Log(src, item,amount)
+end)
+
+function Wrapper:Log(_src,webhook,txt)
+    local src = _src
+    local name = GetPlayerName(src)
+    local steam = GetPlayerIdentifier(src)
+    local ip = GetPlayerEndpoint(src)
+    local identifiers = Wrapper:Identifiers(src)
+    local license = identifiers.license
+    local discord ="<@" ..identifiers.discord:gsub("discord:", "")..">" 
+    local disconnect = {
+            {
+                ["color"] = "16711680", -- Color in decimal
+                ["title"] = txt, -- Title of the embed message
+                ["description"] = "Name: **"..name.."**\nSteam ID: **"..steam.."**\nIP: **" .. ip .."**\nGTA License: **" .. license .. "**\nDiscord Tag: **" .. discord .. "**\nLog: **"..txt.."**", -- Main Body of embed with the info about the person who left
+            }
+        }
+    
+        PerformHttpRequest(webhook, function(err, text, headers) end, "POST", json.encode({username = username, embeds = disconnect, tts = TTS}), { ["Content-Type"] = "application/json" }) -- Perform the request to the discord webhook and send the specified message
+end
+
+-- ^ LOG
+
+-- IDENTIFIER
 
 function Wrapper:Identifiers(src)
     local identifiers = {

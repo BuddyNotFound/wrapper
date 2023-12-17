@@ -15,6 +15,15 @@ AddEventHandler("onResourceStop", function(resourceName)
     if (GetCurrentResourceName() ~= resourceName) then
       return
     end
+    for k,v in pairs(Wrapper.cars) do 
+        DeleteVehicle(v)
+    end
+end)
+
+AddEventHandler("onResourceStop", function(resourceName)
+    if (GetCurrentResourceName() ~= resourceName) then
+      return
+    end
     TriggerEvent(Wrapper.resname.."Wrapper:Reset")
 end)
   
@@ -28,20 +37,9 @@ RegisterNetEvent(Wrapper.resname.."Wrapper:Reset",function()
     end
 end)
 
---
+-- ^ RESETS
 
-function Wrapper:DeleteObject(id)
-    DeleteObject(Wrapper.object[id])
-end
-
-function Wrapper:LoadModel(model) -- Load Model
-    local modelHash = model
-    RequestModel(modelHash)
-    while not HasModelLoaded(modelHash) do
-      Wait(0)
-    end
-end
-
+-- Target
 
 function Wrapper:Target(id,label,pos,event,type) -- QBTarget target create
     if Config.Settings.Target == "QB" then 
@@ -114,6 +112,38 @@ function Wrapper:TargetRemove(sendid) -- Remove QBTarget target
     return
 end
 
+-- ^ Target
+
+-- OBJECT
+function Wrapper:CreateObject(id,prop,coords,network,misson) -- Create object / prop
+    RequestModel(prop)
+    while not HasModelLoaded(prop) do
+      Wait(0)
+    end
+    Wrapper.object[id] = CreateObject(GetHashKey(prop), coords , network or false,misson or false)
+    PlaceObjectOnGroundProperly(Wrapper.object[id])
+    SetEntityHeading(Wrapper.object[id], coords.w)
+    FreezeEntityPosition(Wrapper.object[id], true)
+    SetEntityAsMissionEntity(Wrapper.object[id], true, true)
+end
+
+function Wrapper:DeleteObject(id)
+    DeleteObject(Wrapper.object[id])
+end
+
+function Wrapper:LoadModel(model) -- Load Model
+    local modelHash = model
+    RequestModel(modelHash)
+    while not HasModelLoaded(modelHash) do
+      Wait(0)
+    end
+end
+
+-- ^ OBJECT
+
+
+-- Blip
+
 function Wrapper:Blip(id,label,pos,sprite,color,scale) -- Create Normal Blip on Map
     Wrapper.blip[id] = AddBlipForCoord(pos.x, pos.y, pos.z)
     SetBlipSprite (Wrapper.blip[id], sprite)
@@ -127,57 +157,32 @@ function Wrapper:Blip(id,label,pos,sprite,color,scale) -- Create Normal Blip on 
     return
 end
 
-function Wrapper:RemoveMoney(type,amount)
-    TriggerServerEvent(Wrapper.resname.."Wrapper:RemoveMoney",type,amount)
-end
-
-
 function Wrapper:RemoveBlip(id)
     RemoveBlip(Wrapper.blip[id])
 end
 
-function Wrapper:Stash(label,weight,slots) -- Create and Open a stash in qb-inventory
-    if Config.Settings.Inventory == "QB" then 
-    TriggerEvent("inventory:client:SetCurrentStash", label)
-    TriggerServerEvent("inventory:server:OpenInventory", "stash", label, {
-        maxweight = weight,
-        slots = slots,
-    })
-    end
-    if Config.Settings.Inventory == "OX" then 
-        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:Ox",label)
-        Wait(500)
-        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:Ox:Open",label)
-    end
-    if Config.Settings.Inventory == "QS" then 
-        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:QS",label)
-        Wait(500)
-        local other = {}
-        other.maxweight = 10000 -- Custom weight statsh.
-        other.slots = 50 -- Custom slots spaces.
-        TriggerServerEvent("inventory:server:OpenInventory", "stash", label, other)
-        TriggerEvent("inventory:client:SetCurrentStash", label)
-    end
-end
-
-function Wrapper:Notify(txt,tp,time) -- QBCore notify
-    if Config.Settings.Framework == "QB" then 
-    QBCore.Functions.Notify(txt, tp, time)
-    end
-    if Config.Settings.Framework == "ESX" then 
-        ESX.ShowNotification(txt)
-    end
-end
+-- ^ Blip
 
 
-function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bills => Player and amount (player,amount)
-    TriggerServerEvent(Wrapper.resname.."Wrapper:Bill",playerId, amount)
+-- ADD
+
+function Wrapper:AddMoney(type,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
+    TriggerServerEvent(Wrapper.resname.."Wrapper:AddMoney",type,amount)
 end
+
 
 function Wrapper:AddItem(item,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
     if Config.Settings.ReturnItem then 
         TriggerServerEvent(Wrapper.resname.."Wrapper2:AddItem",item,amount)
     end
+end
+
+-- ADD ^
+
+-- REMOVE
+
+function Wrapper:RemoveMoney(type,amount)
+    TriggerServerEvent(Wrapper.resname.."Wrapper:RemoveMoney",type,amount)
 end
 
 function Wrapper:RemoveItem(item,amount)
@@ -186,26 +191,14 @@ function Wrapper:RemoveItem(item,amount)
     end
 end
 
-function Wrapper:AddMoney(type,amount) -- AddItem to me (Like give item) very unsafe use only in dev build.
-    TriggerServerEvent(Wrapper.resname.."Wrapper:AddMoney",type,amount)
+function Wrapper:Bill(playerId, amount) -- QBCore bill player, YOU (your job) Bills => Player and amount (player,amount)
+    TriggerServerEvent(Wrapper.resname.."Wrapper:Bill",playerId, amount)
 end
 
-function Wrapper:Craft(txt,time) -- Not Done
-    QBCore.Functions.Progressbar("pickup_sla", txt, time, false, true, {
-        disableMovement = true,
-        disableCarMovement = true,
-        disableMouse = false,
-        disableCombat = true,
-    }, {
-        animDict = "mp_common",
-        anim = "givetake1_a",
-        flags = 8,
-    }, {}, {}, function() -- Done
 
-    end, function()
-        QBCore.Functions.Notify("Cancelled..", "error")
-    end)
-end
+-- ^ REMOVE
+
+-- CAM
 
 function Wrapper:Cam(id,trans) -- Create and render a camera :)
     Wrapper.cam[id] = CreateCam("DEFAULT_SCRIPTED_CAMERA", 1)
@@ -231,29 +224,9 @@ function Wrapper:processCamera(id) -- process the camera :)
 	SetCamFov(Wrapper.cam[id], camF - 120) 
 end
 
-function Wrapper:Log(webhook,txt) -- Log all of your abusive staff
-    TriggerServerEvent(Wrapper.resname.."Wrapper:Log",webhook,txt)
-end
+-- ^ CAM
 
-function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very pretty
-    local ped = _ped or PlayerPedId()
-    local coords = _coords
-    if coords == nil then 
-        QBCore.Functions.Notify(Wrapper.resname.."Wrapper: Нямаш coords бай хуй", "error", 2500)
-        return
-    end
-    if fancy then 
-        DoScreenFadeOut(1000)
-        Wait(1000)
-        DoScreenFadeIn(1000)
-    end
-    SetEntityCoords(ped,coords)
-end
-
-function Wrapper:AlertPolice()
--- // insert custom police alert command here
-
-end
+-- VEHICLE
 
 function Wrapper:SpawnVehicle(id,model,pos,heading)
     self:LoadModel(model)
@@ -272,19 +245,80 @@ function Wrapper:DeleteVehicle(id)
     DeleteVehicle(self.cars[id])
 end
 
+-- ^ VEHICLE
+
+
+-- TELEPORT
+
+function Wrapper:Tp(_coords,fancy,ped) -- Teleport to coords, very fancy, very pretty
+    local ped = _ped or PlayerPedId()
+    local coords = _coords
+    if coords == nil then 
+        QBCore.Functions.Notify(Wrapper.resname.."Wrapper: Нямаш coords бай хуй", "error", 2500)
+        return
+    end
+    if fancy then 
+        DoScreenFadeOut(1000)
+        Wait(1000)
+        DoScreenFadeIn(1000)
+    end
+    SetEntityCoords(ped,coords)
+end
+
 function Wrapper:Warp(warp,seat)
     local ped = PlayerPedId()
     TaskWarpPedIntoVehicle(ped, self.cars[warp], seat)
 end
 
-AddEventHandler("onResourceStop", function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then
-      return
+-- ^ TELEPORT
+
+
+-- Notify
+
+function Wrapper:Prompt(msg) --Msg is part of the Text String at B
+	SetNotificationTextEntry("STRING")
+	AddTextComponentString(msg) -- B
+	DrawNotification(true, false) -- Look on that website for what these mean, I forget. I think one is about flashing or not
+end
+
+function Wrapper:Notify(txt,tp,time) -- QBCore notify
+    if Config.Settings.Framework == "QB" then 
+    QBCore.Functions.Notify(txt, tp, time)
     end
-    for k,v in pairs(Wrapper.cars) do 
-        DeleteVehicle(v)
+    if Config.Settings.Framework == "ESX" then 
+        ESX.ShowNotification(txt)
     end
-end)
+end
+
+-- ^ Notify
+
+
+-- OTHER
+
+
+function Wrapper:Stash(label,weight,slots) -- Create and Open a stash in qb-inventory
+    if Config.Settings.Inventory == "QB" then 
+    TriggerEvent("inventory:client:SetCurrentStash", label)
+    TriggerServerEvent("inventory:server:OpenInventory", "stash", label, {
+        maxweight = weight,
+        slots = slots,
+    })
+    end
+    if Config.Settings.Inventory == "OX" then 
+        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:Ox",label)
+        Wait(500)
+        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:Ox:Open",label)
+    end
+    if Config.Settings.Inventory == "QS" then 
+        TriggerServerEvent(Wrapper.resname.."Wrapper:Inventory:Stash:QS",label)
+        Wait(500)
+        local other = {}
+        other.maxweight = 10000 -- Custom weight statsh.
+        other.slots = 50 -- Custom slots spaces.
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", label, other)
+        TriggerEvent("inventory:client:SetCurrentStash", label)
+    end
+end
 
 function Wrapper:QBPlate(id)
     local plate = QBCore.Functions.GetPlate(self.cars[id])
@@ -296,21 +330,31 @@ function Wrapper:QBPlateST(id)
     return plate
 end
 
-function Wrapper:Prompt(msg) --Msg is part of the Text String at B
-	SetNotificationTextEntry("STRING")
-	AddTextComponentString(msg) -- B
-	DrawNotification(true, false) -- Look on that website for what these mean, I forget. I think one is about flashing or not
+function Wrapper:Log(webhook,txt) -- Log all of your abusive staff
+    TriggerServerEvent(Wrapper.resname.."Wrapper:Log",webhook,txt)
 end
 
 
-function Wrapper:CreateObject(id,prop,coords,network,misson) -- Create object / prop
-    RequestModel(prop)
-    while not HasModelLoaded(prop) do
-      Wait(0)
-    end
-    Wrapper.object[id] = CreateObject(GetHashKey(prop), coords , network or false,misson or false)
-    PlaceObjectOnGroundProperly(Wrapper.object[id])
-    SetEntityHeading(Wrapper.object[id], coords.w)
-    FreezeEntityPosition(Wrapper.object[id], true)
-    SetEntityAsMissionEntity(Wrapper.object[id], true, true)
+function Wrapper:AlertPolice()
+-- // insert custom police alert command here
+
 end
+
+function Wrapper:Craft(txt,time) -- Not Done
+    QBCore.Functions.Progressbar("pickup_sla", txt, time, false, true, {
+        disableMovement = true,
+        disableCarMovement = true,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = "mp_common",
+        anim = "givetake1_a",
+        flags = 8,
+    }, {}, {}, function() -- Done
+
+    end, function()
+        QBCore.Functions.Notify("Cancelled..", "error")
+    end)
+end
+
+-- ^ OTHER

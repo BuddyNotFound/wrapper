@@ -14,3 +14,13 @@ RegisterNetEvent('Wrapper:Server:TriggerCallback', function(name, ...)
         TriggerClientEvent('Wrapper:Client:TriggerCallback', src, name, ...)
     end, ...)
 end)
+
+-- EXMAPLE
+
+[[-- 
+
+Wrapper.CreateCallback('bbv-nos:loadnosenter', function(source, cb, data)
+
+end)
+
+--]] 
